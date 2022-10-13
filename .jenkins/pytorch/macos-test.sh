@@ -48,6 +48,7 @@ if [[ ${BUILD_ENVIRONMENT} != *arm64* ]]; then
     exit 1
   fi
   popd
+
 fi
 
 setup_test_python() {

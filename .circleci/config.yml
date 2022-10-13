@@ -130,7 +130,7 @@ commands:
     steps:
       - brew_update
       - brew_install:
-          formulae: libomp
+          formulae: libomp@14.0.6
 
   run_brew_for_ios_build:
     steps:

@@ -130,7 +130,7 @@ commands:
     steps:
       - brew_update
       - brew_install:
-          formulae: libomp@14.0.6
+          formulae: libomp
 
   run_brew_for_ios_build:
     steps:
@@ -640,6 +640,9 @@ jobs:
             export PATH="${WORKSPACE_DIR}/miniconda3/bin:$PATH"
             # shellcheck disable=SC1091
             source "${WORKSPACE_DIR}"/miniconda3/bin/activate
+
+            export LDFLAGS="-L/usr/local/opt/libomp/lib"
+            export CPPFLAGS="-I/usr/local/opt/libomp/include"
 
             echo "export CMAKE_PREFIX_PATH=${CONDA_PREFIX:-"$(dirname "$(which conda)")/../"}" >> "${BASH_ENV}"
             .jenkins/pytorch/macos-build.sh

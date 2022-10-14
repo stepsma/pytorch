@@ -5,8 +5,7 @@
 source "$(dirname "${BASH_SOURCE[0]}")/macos-common.sh"
 # shellcheck source=./common-build.sh
 source "$(dirname "${BASH_SOURCE[0]}")/common-build.sh"
-export LDFLAGS="-L/usr/local/opt/libomp/lib"
-export CPPFLAGS="-I/usr/local/opt/libomp/include"
+
 # Build PyTorch
 if [ -z "${CI}" ]; then
   export DEVELOPER_DIR=/Applications/Xcode9.app/Contents/Developer

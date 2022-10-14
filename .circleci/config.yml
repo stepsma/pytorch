@@ -641,10 +641,6 @@ jobs:
             # shellcheck disable=SC1091
             source "${WORKSPACE_DIR}"/miniconda3/bin/activate
 
-            export LDFLAGS="-L/usr/local/opt/libomp/lib"
-            export CPPFLAGS="-I/usr/local/opt/libomp/include"
-            brew uninstall libomp
-            brew install --force libomp
             brew link --force libomp
 
             echo "export CMAKE_PREFIX_PATH=${CONDA_PREFIX:-"$(dirname "$(which conda)")/../"}" >> "${BASH_ENV}"

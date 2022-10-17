@@ -160,7 +160,10 @@ def get_per_tensor_qparams(activation_post_process):
     dtype = activation_post_process.dtype
     return scale, zero_point, dtype
 
-def get_quantize_node_info(activation_post_process: Callable) -> Optional[Tuple[str, Union[Callable, str], Dict[str, Any]]]:
+def get_quantize_node_info(
+        activation_post_process: Callable,
+        is_decomposed_qtensor: bool
+) -> Optional[Tuple[str, Union[Callable, str], Dict[str, Any]]]:
     ''' Given an activation_post_process module,
     return node_type(e.g. call_function), quantize op(e.g. quantize_per_tensor) and a dictionary
     of extracted qparams from the module
@@ -177,17 +180,26 @@ def get_quantize_node_info(activation_post_process: Callable) -> Optional[Tuple[
         if is_per_channel(activation_post_process.qscheme):  # type: ignore[attr-defined]
             ch_axis = int(activation_post_process.ch_axis)  # type: ignore[attr-defined]
             qparams = {"_scale_": scale, "_zero_point_": zero_point, "_axis_": ch_axis, "_dtype_": dtype}
-            quantize_op = torch.quantize_per_channel
+            if is_decomposed_qtensor:
+                raise NotImplementedError("decomposed quantize_per_tensor op not implemented yet")
+            else:
+                quantize_op = torch.quantize_per_channel
         else:
             scale = float(scale)
             zero_point = int(zero_point)
             qparams = {"_scale_": scale, "_zero_point_": zero_point, "_dtype_": dtype}
-            quantize_op = torch.quantize_per_tensor
+            if is_decomposed_qtensor:
+                quantize_op = torch.decomposed_quantize_per_tensor
+            else:
+                quantize_op = torch.quantize_per_tensor
     elif compute_dtype in [torch.quint8, torch.qint8, torch.float16]:
         # TODO(future PR): switch compute_dtype to is_dynamic
         # dynamic quantization
         node_type = "call_function"
-        quantize_op = torch.quantize_per_tensor_dynamic
+        if is_decomposed_qtensor:
+            raise NotImplementedError("decomposed quantize_per_tensor_dynamic op not implemented yet")
+        else:
+            quantize_op = torch.quantize_per_tensor_dynamic
         # TODO: get reduce range from observer
         # reduce_range = activation_post_process.reduce_range
         reduce_range = torch.backends.quantized.engine in ("fbgemm", "x86")
@@ -201,6 +213,7 @@ def get_quantize_node_info(activation_post_process: Callable) -> Optional[Tuple[
         return None
     return node_type, quantize_op, qparams
 
+# TODO: looks like this is not used, remove
 def quantize_node(
         in_node: Node,
         obs_module: torch.nn.Module,
@@ -247,7 +260,7 @@ def quantize_node(
         module_path = ""
     root_module = modules['']
     graph = quantized_graph
-    maybe_quantize_node_info = get_quantize_node_info(obs_module)
+    maybe_quantize_node_info = get_quantize_node_info(obs_module, False)
     assert maybe_quantize_node_info is not None, \
         f"Expecting quantize node info not to be None, observer: {obs_module}"
     node_type, quantize_op, qparams = maybe_quantize_node_info
